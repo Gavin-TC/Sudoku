@@ -88,7 +88,6 @@ public class Grid {
 					grid[x][y] = Color.TEXT_RESET + " ";
 			}
 		}
-		System.out.println(stuckSpots);
 	}
 
 	public static boolean validCoorindates(String coordinates)
