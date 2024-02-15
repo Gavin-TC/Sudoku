@@ -34,7 +34,7 @@ public class Main
 
       // player chooses their number, and make sure the number is between 0-9.
       System.out.print("Number to place: ");
-      int number = Math.max(0, Math.min(in.nextInt(), 9));
+      int number = Math.max(1, Math.min(in.nextInt(), 9));
 
       Grid.placeNumber(newSpot, number);
 

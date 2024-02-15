@@ -1,12 +1,12 @@
-
 import java.util.Random;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
-
+import java.util.Collections;
+import java.util.List;
 
 public class Grid {
-	private static String[][] grid = new String[9][9];
+	private static int[][] grid = new int[9][9];
 	private static String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H", "I"};
 	private static ArrayList<Vector<Integer>> stuckSpots = new ArrayList<>();
 
@@ -16,79 +16,74 @@ public class Grid {
 		{
 			for (int y = 0; y < grid.length; y++)
 			{
-				grid[y][x] = " ";
+				grid[y][x] = 0;
 			}
 		}
 	}
 
 	public static void generatePuzzle()
 	{
-		fillGrid();
+		fillGrid();  // Make grid empty.
+		solve(grid);
 
-		for (int x = 0; x < grid.length; x++)
+		for (int i = 0; i < 50; i++)
 		{
-			for (int y = 0; y < grid.length; y++)
-			{
-				Random random = new Random();
-				boolean isNumber = random.nextBoolean();
+			Random random = new Random();
+			int x = random.nextInt(0, 9);
+			int y = random.nextInt(0, 9);
 
-				if (isNumber)
-				{
-					boolean isValid = true;
-					String number = String.valueOf(random.nextInt(1, 9));
+			grid[x][y] = 0;
 
-					// Check if the number is already in the row
-					for (int i = 0; i < grid[x].length; i++)
-					{
-						if (grid[x][i].equals(Color.TEXT_RED + number)) {
-							isValid = false;
-							break;
-						}
-					}
-
-					// Check if the number is already in the column 
-					for (int i = 0; i < grid[0].length; i++)
-					{
-						if (grid[i][y].equals(Color.TEXT_RED + number))
-						{
-							isValid = false;
-							break;
-						}
-					}
-
-					// Check if the number is already in the 3x3 grid
-					int gridX = (int) x / 3;
-					int gridY = (int) y / 3;
-
-					for (int i = gridX * 3; i < (gridX + 1) * 3; i++)
-					{
-						for (int j = gridY * 3; j < (gridY + 1) * 3; j++)
-						{
-							if (grid[i][j].equals(Color.TEXT_RED + number))
-							{
-								isValid = false;
-								break;
-							}
-						}
-					}
-
-					if (isValid)
-					{
-						Vector<Integer> vector = new Vector<>();
-						vector.add(x);
-						vector.add(y);
-						stuckSpots.add(vector);
-
-						grid[x][y] = Color.TEXT_RED + number;
-					}
-					else
-						grid[x][y] = Color.TEXT_RESET + " ";
-				}
-				else
-					grid[x][y] = Color.TEXT_RESET + " ";
-			}
+			if (solve(grid) == false)
+				System.out.println("Not solveable");
 		}
 	}
+
+	public static boolean solve(int[][] board) {
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (board[i][j] == 0) {
+                    List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);
+                    Collections.shuffle(numbers);
+                    for (int num : numbers) {
+                        if (isValid(board, i, j, num)) {
+                            board[i][j] = num;
+
+                            if (solve(board)) {
+                                return true;
+                            } else {
+                                board[i][j] = 0; // undo the current cell for backtracking
+                            }
+                        }
+                    }
+                    return false; // trigger backtracking
+                }
+            }
+        }
+        return true; // sudoku solved
+    }
+
+    private static boolean isValid(int[][] board, int row, int col, int num) {
+        // check the number in the current row
+        for (int i = 0; i < 9; i++)
+            if (board[row][i] == num)
+                return false;
+
+        // check the number in the current column
+        for (int i = 0; i < 9; i++)
+            if (board[i][col] == num)
+                return false;
+
+        // check the number in the current 3x3 box
+        int boxRow = row - row % 3;
+        int boxCol = col - col % 3;
+
+        for (int i = boxRow; i < boxRow + 3; i++)
+            for (int j = boxCol; j < boxCol + 3; j++)
+                if (board[i][j] == num)
+                    return false;
+        return true;
+    }
 
 	public static boolean validCoorindates(String coordinates)
 	{
@@ -130,21 +125,26 @@ public class Grid {
 		int x = vector.get(1);
 		int y = vector.get(0);
 
-		grid[y][x] = String.valueOf(number);
+		grid[y][x] = number;
 	}
 
-	public static boolean isWin()
+	private static boolean isGridEmpty()
 	{
-		
 		for (int x = 0; x < grid.length; x++)
 		{
 			for (int y = 0; y < grid.length; y++)
 			{
-				if (grid[y][x] == " ")
+				if (grid[y][x] == 0)
 					// Board isn't empty yet
 					return false;
 			}
 		}
+		return true;
+	}
+
+	public static boolean isWin()
+	{
+		if (!isGridEmpty()) return false;	
 
 		boolean isValid = true;
 
@@ -162,7 +162,7 @@ public class Grid {
 					// Check if the number is already in the row
 					for (int i = 0; i < grid[x].length; i++)
 					{
-						if (grid[x][i].equals(Color.TEXT_RED + number)) {
+						if (String.valueOf(grid[x][i]).equals(Color.TEXT_RED + number)) {
 							isValid = false;
 							break;
 						}
@@ -171,7 +171,7 @@ public class Grid {
 					// Check if the number is already in the column 
 					for (int i = 0; i < grid[0].length; i++)
 					{
-						if (grid[i][y].equals(Color.TEXT_RED + number))
+						if (String.valueOf(grid[i][y]).equals(Color.TEXT_RED + number))
 						{
 							isValid = false;
 							break;
@@ -186,7 +186,7 @@ public class Grid {
 					{
 						for (int j = gridY * 3; j < (gridY + 1) * 3; j++)
 						{
-							if (grid[i][j].equals(Color.TEXT_RED + number))
+							if (String.valueOf(grid[i][j]).equals(Color.TEXT_RED + number))
 							{
 								isValid = false;
 								break;
@@ -201,7 +201,7 @@ public class Grid {
 
 	public static void printGrid()
 	{
-		System.out.println("\t" + Color.TEXT_YELLOW + "   SUDOKU!\n\t   =======\n");
+		System.out.println("\t" + Color.TEXT_YELLOW + "   SUDOKU!\n\t -=========-\n");
 		System.out.println("    1 2 3   4 5 6   7 8 9");
 		System.out.println("    _____________________");
 		for (int x = 0; x < grid.length; x++)
@@ -214,7 +214,10 @@ public class Grid {
 					System.out.print(Color.TEXT_YELLOW + "| " + Color.TEXT_RESET);
 
 				// Text color reset
-				System.out.print(grid[x][y] + " " + Color.TEXT_RESET);
+				if (grid[x][y] == 0)
+					System.out.print("  " + Color.TEXT_RESET);
+				else
+					System.out.print(grid[x][y] + " " + Color.TEXT_RESET);
 			}
 			System.out.println();
 
